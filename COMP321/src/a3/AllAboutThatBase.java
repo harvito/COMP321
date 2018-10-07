@@ -3,94 +3,91 @@ package a3;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class AllAboutThatBase {
-	
+	//useful constant
 	final public static String BASES = "0123456789abcdefghijklmnopqrstuvwxyz0";
 	
+	//check for the highest symbol that occurs and output the lowest possible base
 	private static int lowestBase(String s) {
-		char greatestChar = 0;
+		int res = 0;
+		Boolean isUnary = true;
 		for (int i = 0; i < s.length(); i++) {
-			if (s.charAt(i) > greatestChar)
-				greatestChar = s.charAt(i);
+			//check if a non-unary digit exists
+			if (s.charAt(i) != '1') {
+				isUnary = false;
+			}
+			
+			if (Character.digit(s.charAt(i), 36) > res) {
+				res = Character.digit(s.charAt(i), 36);
+			}
 		}
-		if (greatestChar == '1')
+		if (res == 1 && isUnary) { //111 is unary but 101 is not
 			return 1;
-		else if (greatestChar == 'z')
-			return 36;
-        return BASES.indexOf(greatestChar+1);
+		} else {
+			return res + 1;
+		}
 	}
 	
-	private static String check(String X, String Y, char op, String Z, int b) {
-		BigDecimal x;
-		BigDecimal y;
-		BigDecimal z;
-		
-		//special case: input is unary and uses symbol "1" instead of "0"
+	//interpret s as base b and output the corresponding long value
+	private static long longFromBase(String s, int b) {
 		if (b == 1) {
-			// Although unspecified in the problem, assume "0" represents zero in unary
-			x = (X == "0") ? BigDecimal.ZERO : new BigDecimal(Integer.toString(X.length(), 10));
-			y = (Y == "0") ? BigDecimal.ZERO : new BigDecimal(Integer.toString(Y.length(), 10));
-			z = (Z == "0") ? BigDecimal.ZERO : new BigDecimal(Integer.toString(Z.length(), 10));
+			return s.length();
 		}
-		else {
-			x = new BigDecimal(new BigInteger(X, b));
-			y = new BigDecimal(new BigInteger(Y, b));
-			z = new BigDecimal(new BigInteger(Z, b));
+		long res = 0;
+		for (int i = 0; i < s.length(); i++) {
+			res = res*b + Character.digit(s.charAt(i), 36);
 		}
-		
+		return res;
+	}
+	
+	//check the math operation
+	private static Boolean check(long x, char op, long y, long z) {
 		switch (op) {
 		case '+' :
-			if ((x.add(y)).equals(z))
-				return Character.toString(BASES.charAt(b));
-			break;
+			return x + y == z;
 		case '-' :
-			if ((x.subtract(y)).equals(z))
-				return Character.toString(BASES.charAt(b));
-			break;
+			return x - y == z;
 		case '*' :
-			if ((x.multiply(y)).equals(z))
-				return Character.toString(BASES.charAt(b));
-			break;
+			return x * y == z;
 		case '/' :
-			if ((x.divide(y)).equals(z))
-				return Character.toString(BASES.charAt(b));
-			break;
-		}
-		return "";
-	}
-
-	//using Java's BigInteger, we still need to deal with special case unary
-	public static void main(String[] args) throws NumberFormatException, IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		//System.out.println(new BigDecimal(111));
-		//System.exit(0);
-		
-		int N = Integer.parseInt(br.readLine()), lowestBase;
-		char op;
-		String[] nugs;
-		String X, Y, Z, output;
-		for (int i = 0; i < N; i++) {
-			//find the biggest digit (0 < 9 < a < z) and start testing from there
-			//test all bases, outputting the ones that work as we go ("0" is base 36)
-			//if no bases work print "invalid"
-			nugs = br.readLine().split(" ");
-			X = nugs[0];
-			Y = nugs[2];
-			Z = nugs[4];
-			output = "";
-			lowestBase = lowestBase(X+Y+Z);
-			op = nugs[1].charAt(0);
-			for (int j = lowestBase; j <= 36; j++) {
-				output += check(X, Y, op, Z, j);
+			try {
+				return x%y == 0 && x/y == z; //integer division check
+			} catch (ArithmeticException e) {
+				return false;
 			}
-			if (output.isEmpty())
-				System.out.println("invalid");
-			else
-				System.out.println(output);
 		}
+		return false;
+	}
+	
+	public static void main(String[] args) throws IOException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        int N = Integer.parseInt(br.readLine());
+        
+        String[] ln; //input line
+        String out; //build the output for each test case
+        int lowestBase; //start from the lowest base and work our way up
+        long x, y, z;
+        for (int i = 0; i < N; i++) {
+        	out = "";
+        	ln = br.readLine().split(" ");
+        	lowestBase = lowestBase(ln[0] + ln[2] + ln[4]);
+        	for (int b = lowestBase; b <= 36; b++) {
+        		x = longFromBase(ln[0], b);
+        		y = longFromBase(ln[2], b);
+        		z = longFromBase(ln[4], b);
+        		
+        		if (check(x, ln[1].charAt(0), y, z)) {
+        			out += BASES.charAt(b);
+        		}
+        	}
+        	if (out == "") {//valid in no base
+        		System.out.println("invalid");
+        	} else {
+        		System.out.println(out);
+        	}
+        	
+        }
 	}
 
 }
