@@ -1,0 +1,48 @@
+an optimal solution is a set of k rooms (row, col) that are closed. this solution should come from a function value(start, end, k). We can Define the value function recursively:
+value(start, end, k) {
+	if k == 0, return sum(start, end)
+	else {
+		return max(closing right room on first row, closing left room on first row, not closing a room in the first row)
+		return max(value of 2 left rooms that are opened + value(remaining rooms), value of 2 right rooms that are opened + value(remaining rooms), sum(start) + value(start + 1, end, k))
+	}
+}
+
+valueOneSidedStart(start, side, end, k) { //ex. (valueOneSidedStart(3, L, NMAX, 3)
+	if k == 0 return sum(start, side) + sum(start+1, end)
+	else {
+		return max(closing room on same side, not closing room on same side)
+		return max(value of diagonal room kept open + valueOneSided(start+1, side, end, k-1), value of room (start, side) + value(start, end, k))
+	}
+}
+
+
++=================== putting it together ======================+
+- remove parameter "end"
+- add parameter roomOpenedInStartRow: L, R, or NEITHER
+	- the room that must stay open in the start row due to a closure in the previous row.
+	- NEITHER implies that there is no closure in the previous row
+
+NMAX: index of last row in art gallery
+sum() gives the values of the room(s) specified
+
+value(start, roomOpenedInStartRow, k) {
+	//BASE CASES: k == 0 or k == NMAX - start + 1
+	if (k == 0) {
+		return sum(start + 1, NMAX) + sum(start, !roomOpenedInStartRow)
+	}
+	if (k == NMAX - start + 1) {
+		return max(sum(start, NMAX, L), sum(start, NMAX, R))
+	}
+	
+	//recursive cases
+	if (roomOpenedInStartRow != NEITHER) { //one of the rooms in the start row must stay open. we may close room in came col as previous row, or not.
+		//return max(closing room on same side as previous row, not closing room on same side as previous row)
+		return max(sum(start+1, roomOpenedInStartRow) + value(start+1, roomOpenedInStartRow, k-1),
+			sum(start, !roomOpenedInStartRow) + value(start+1, NEITHER, k));
+	} else { //we may close L, R, or neither
+		//return max(closing left room, closing right room, closing neither)
+		return max(sum(rightCol, start to start+1) + value(start+1, R, k-1),
+			sum(leftCol, start to start+1) + value(start+1, L, k-1),
+			sum(start) + value(start+1, NEITHER, k));
+	}
+}
