@@ -1,8 +1,8 @@
-package COMP321;
+package a4;
 
 
 
-public class narrowArtGallery {
+public class NarrowArtGallery {
     public static final int L = 0;
     public static final int R = 1;
     public static final int NEITHER = 2;
