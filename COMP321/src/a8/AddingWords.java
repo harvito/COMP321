@@ -14,55 +14,51 @@ public class AddingWords {
     String line;
     String[] tks;
     Integer sum, val;
-    boolean unknown;
     
-    HashMap<String, Integer> defs = new HashMap<String, Integer>();
+    HashMap<String, Integer> word2val = new HashMap<String, Integer>();
+    HashMap<Integer, String> val2word = new HashMap<Integer, String>();
     
     commandLoop:
-    while ((line = br.readLine()) != null) {
-//      System.err.println("<" + line + ">");
+    while (true) {
+      line = br.readLine();
+      if (line == null || line.isEmpty()) {
+        System.exit(0);
+      }
       tks = line.split(" ");
       if (tks[0].equals("def")) {
-        defs.put(tks[1], Integer.parseInt(tks[2]));
+        word2val.put(tks[1], Integer.parseInt(tks[2]));
+        val2word.put(Integer.parseInt(tks[2]), tks[1]);
       } else if (tks[0].equals("calc")) {
-        
-        unknown = false;
-        // set sum to initial value and check if it's null
-        if ((sum = defs.get(tks[1])) == null) {
-          unknown = true;
+    	// prepare output string
+    	System.out.print(line.substring(5) + " ");
+    	
+        sum = 0;
+    	boolean add = true;
+        for (int i = 1; i < tks.length - 1; i++) {
+        	if (tks[i].equals("-")) {
+        		add = false;
+        	} else if (tks[i].equals("+")) {
+        		add = true;
+        	} else {
+        		if (word2val.containsKey(tks[i])) {
+        			val = word2val.get(tks[i]);
+        			sum = add ? sum + val : sum - val;
+        		} else {
+        			System.out.println("unknown");
+        			continue commandLoop;
+        		}
+        	}
         }
         
-        // go thru list
-        for (int i = 2; i < tks.length - 1; i += 2) {
-          if (unknown || (val = defs.get(tks[i+1])) == null) {
-            unknown = true;
-            break;
-          } else {
-            if (tks[i].equals("+")) {
-              sum += val;
-            } else {
-              sum -= val;
-            }
-          }
-        }
-        
-        // output
-        System.out.print(line.substring(5) + " ");
-        if (unknown) {
+        if (val2word.containsKey(sum)) {
+        	System.out.println(val2word.get(sum));
+        } else {
           System.out.println("unknown");
-          continue commandLoop;
         }
-        // check if we have key for sum
-        for (Entry<String, Integer> entry : defs.entrySet()) {
-          if (entry.getValue() == sum) {
-            System.out.println(entry.getKey());
-            continue commandLoop;
-          }
-        }
-        System.out.println("unknown");
         
       } else { //clear
-        defs.clear();
+        word2val.clear();
+        val2word.clear();
       }
     }
 
